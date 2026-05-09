@@ -42,8 +42,8 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         REBALANCE_LOOP: "true",
-        INTERVAL_SEC: "60",
-        REBALANCE_TOLERANCE_BPS: "100",
+        INTERVAL_SEC: "180",
+        REBALANCE_TOLERANCE_BPS: "300",
         MAX_REBALANCE_USDC: "200",
       },
       max_memory_restart: "512M",
