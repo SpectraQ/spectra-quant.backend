@@ -52,6 +52,8 @@ import { makeSwapCpmmBaseInInstruction } from "@raydium-io/raydium-sdk-v2";
 import BN from "bn.js";
 import dotenv from "dotenv";
 
+import { fetchPoolView, type PoolView } from "./lib/raydium_pool";
+
 const ROOT = path.resolve(__dirname, "..");
 dotenv.config({ path: path.join(ROOT, ".env") });
 
@@ -89,20 +91,6 @@ const INTERVAL_SEC = Number(process.env.INTERVAL_SEC || "60");
 const PRICE_OFFSET = 73;
 const EXPONENT_OFFSET = 89;
 
-// ---- types ------------------------------------------------------------------
-
-interface PoolView {
-  programId: string;
-  poolId: string;
-  poolAuth: string | null;
-  mintA: string;
-  mintB: string;
-  vaultA: string;
-  vaultB: string;
-  wsolReserve: string;
-  usdcReserve: string;
-}
-
 // ---- helpers ----------------------------------------------------------------
 
 function loadKeypair(absPath: string): Keypair {
@@ -110,16 +98,10 @@ function loadKeypair(absPath: string): Keypair {
   return Keypair.fromSecretKey(Uint8Array.from(JSON.parse(raw) as number[]));
 }
 
-async function fetchPool(): Promise<PoolView> {
-  const res = await fetch("http://localhost:3000/api/raydium-pool");
-  const body = (await res.json()) as { pool?: PoolView; errored?: string };
-  if (!body.pool) {
-    throw new Error(
-      `/api/raydium-pool returned no pool: ${body.errored ?? "unknown"}`,
-    );
-  }
-  if (!body.pool.poolAuth) throw new Error("pool view missing poolAuth");
-  return body.pool;
+async function fetchPool(connection: Connection): Promise<PoolView> {
+  const pool = await fetchPoolView(connection);
+  if (!pool.poolAuth) throw new Error("pool view missing poolAuth");
+  return pool;
 }
 
 async function fetchPythSolUsdE6(connection: Connection): Promise<bigint> {
@@ -289,7 +271,7 @@ async function executeRebalance(
     try {
       const acc = await getAccount(connection, userInput);
       currentWsol = BigInt(acc.amount.toString());
-    } catch {
+    } catch {AGENT_KEYPAIR_PATH
       /* ATA fresh */
     }
     if (currentWsol < plan.amountIn) {
@@ -360,7 +342,7 @@ async function rebalanceOnce(
   connection: Connection,
   owner: Keypair,
 ): Promise<void> {
-  const pool = await fetchPool();
+  const pool = await fetchPool(connection);
   const pythE6 = await fetchPythSolUsdE6(connection);
   const plan = planRebalance(
     BigInt(pool.wsolReserve),

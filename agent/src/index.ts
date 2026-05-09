@@ -17,24 +17,14 @@
 
 import * as path from "node:path";
 import * as fs from "node:fs";
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  Transaction,
-} from "@solana/web3.js";
-import {
-  getAssociatedTokenAddressSync,
-} from "@solana/spl-token";
+import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import anchor from "@coral-xyz/anchor";
 import pino from "pino";
 import pretty from "pino-pretty";
 
 import { loadConfig, redactKeys, type AgentConfig } from "./config.js";
-import {
-  closesE6,
-  getRecentPrices,
-} from "./priceFeed.js";
+import { closesE6, getRecentPrices } from "./priceFeed.js";
 import {
   awaitSignal,
   mockComputeSignal,
@@ -102,8 +92,7 @@ function loadIdl(programId: PublicKey): anchor.Idl {
     import.meta.dirname,
     "..",
     "..",
-    "target",
-    "idl",
+    "keys",
     "spectraq_vault.json",
   );
   const idl = JSON.parse(fs.readFileSync(idlPath, "utf8")) as anchor.Idl;
@@ -173,7 +162,11 @@ async function runOneTick(ctx: TickContext): Promise<void> {
     // on the next tick. Only honored when MOCK_MPC=true.
     let signal: Signal;
     const forced = process.env.FORCE_SIGNAL;
-    if (ctx.cfg.mockMpc && forced != null && (forced === "0" || forced === "1" || forced === "-1")) {
+    if (
+      ctx.cfg.mockMpc &&
+      forced != null &&
+      (forced === "0" || forced === "1" || forced === "-1")
+    ) {
       signal = Number(forced) as Signal;
       tickLog.info({ signal, mode: "forced" }, "FORCE_SIGNAL override");
       await stampMockSignal(ctx.arcium, signal);
@@ -188,7 +181,10 @@ async function runOneTick(ctx: TickContext): Promise<void> {
       await stampMockSignal(ctx.arcium, signal);
     } else {
       const { computationOffset } = await requestSignal(ctx.arcium, prices);
-      tickLog.info({ computationOffset: computationOffset.toString() }, "queued MPC");
+      tickLog.info(
+        { computationOffset: computationOffset.toString() },
+        "queued MPC",
+      );
       signal = await awaitSignal(ctx.arcium, 60_000);
       tickLog.info({ signal, mode: "real" }, "received signal from cluster");
     }

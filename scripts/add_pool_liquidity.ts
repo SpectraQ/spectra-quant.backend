@@ -32,6 +32,8 @@ import { makeDepositCpmmInInstruction } from "@raydium-io/raydium-sdk-v2";
 import BN from "bn.js";
 import dotenv from "dotenv";
 
+import { fetchPoolView, type PoolView } from "./lib/raydium_pool";
+
 const ROOT = path.resolve(__dirname, "..");
 dotenv.config({ path: path.join(ROOT, ".env") });
 
@@ -49,30 +51,12 @@ if (!Number.isFinite(USDC_AMOUNT_HUMAN) || USDC_AMOUNT_HUMAN <= 0) {
 }
 const USDC_E6 = BigInt(Math.round(USDC_AMOUNT_HUMAN * 1_000_000));
 
-interface PoolView {
-  programId: string;
-  poolId: string;
-  poolAuth: string | null;
-  mintA: string;
-  mintB: string;
-  vaultA: string;
-  vaultB: string;
-  wsolReserve: string;
-  usdcReserve: string;
-  lpMint: string | null;
-  lpSupply: string | null;
-}
-
-async function fetchPool(): Promise<PoolView> {
-  const res = await fetch("http://localhost:3000/api/raydium-pool");
-  const body = (await res.json()) as { pool?: PoolView; errored?: string };
-  if (!body.pool) {
-    throw new Error(`/api/raydium-pool returned no pool: ${body.errored ?? "unknown"}`);
-  }
-  if (!body.pool.lpMint || !body.pool.lpSupply || !body.pool.poolAuth) {
+async function fetchPool(connection: Connection): Promise<PoolView> {
+  const pool = await fetchPoolView(connection);
+  if (!pool.lpMint || !pool.lpSupply || !pool.poolAuth) {
     throw new Error("pool view missing lpMint / lpSupply / poolAuth");
   }
-  return body.pool;
+  return pool;
 }
 
 function loadKeypair(absPath: string): Keypair {
@@ -91,7 +75,7 @@ async function main(): Promise<void> {
   console.log("payer       :", owner.publicKey.toBase58());
   console.log("usdc deposit:", `${USDC_AMOUNT_HUMAN} USDC (${USDC_E6} e6)`);
 
-  const pool = await fetchPool();
+  const pool = await fetchPool(connection);
   const usdcReserve = BigInt(pool.usdcReserve);
   const wsolReserve = BigInt(pool.wsolReserve);
   const lpSupply = BigInt(pool.lpSupply!);

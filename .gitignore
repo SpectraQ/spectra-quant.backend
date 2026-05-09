@@ -4,6 +4,7 @@
 .env.*.local
 *.pem
 *.key
+keys
 
 # Solana keypairs (NEVER commit upgrade authority or admin/agent keys)
 **/id.json
