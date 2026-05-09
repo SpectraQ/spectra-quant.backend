@@ -120,11 +120,11 @@ elif [[ "$RPC_URL" != "$PUBLIC_DEVNET_RPC" ]]; then
   fi
 fi
 # Program upgrade authority (used by anchor deploy + init-mxe.sh).
-DEPLOY_KEYPAIR="${ANCHOR_WALLET:-$ROOT/../keys/id.json}"
+DEPLOY_KEYPAIR="${ANCHOR_WALLET:-$ROOT/keys/id.json}"
 # Vault admin (separate identity so the upgrade authority isn't the same
 # pubkey that holds vault control — gives one extra layer of separation).
-ADMIN_KEYPAIR="${SPECTRAQ_ADMIN_KEYPAIR:-$ROOT/../keys/spectraq_admin.json}"
-AGENT_KEYPAIR="${AGENT_KEYPAIR_PATH:-$ROOT/../keys/spectraq_agent.json}"
+ADMIN_KEYPAIR="${SPECTRAQ_ADMIN_KEYPAIR:-$ROOT/keys/spectraq_admin.json}"
+AGENT_KEYPAIR="${AGENT_KEYPAIR_PATH:-$ROOT/keys/spectraq_agent.json}"
 MXE_PUBKEY="${ARCIUM_MXE_PUBKEY:-HjiD5aGYnE3unNnKh89xF7thQrF636i2RUw6jV2jNnKt}"
 
 log "log file       : $LOG_FILE"
